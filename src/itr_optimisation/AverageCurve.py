@@ -2,7 +2,6 @@ import scipy
 import scipy.interpolate
 import scipy.optimize
 import numpy as np
-import matplotlib2tikz
 import matplotlib.pyplot as plt
 
 import Curve
@@ -55,11 +54,7 @@ class AverageCurve(object):
             return key + '-average'
 
     def plot(self, num=1):
-        plt.figure(num)
         self.makePlot()
-        # import time
-        # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file" + str(round(time.time())) + ".tex")
-        plt.draw()
 
     def makePlot(self):
         for key in sorted(self.curves):
@@ -68,7 +63,7 @@ class AverageCurve(object):
         plt.xlim([0.0, 1.0])
         plt.ylim([0.0, 1.05])
         self.setPlotLabels()
-        plt.legend(loc="lower right")
+        plt.legend(loc="lower right", prop={'size': 6})
 
     def calculateThresholds(self, *args):
         raise NotImplementedError("calculateThresholds not implemented!")

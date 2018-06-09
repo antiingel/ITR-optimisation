@@ -1,13 +1,14 @@
 import numpy as np
 import sklearn.metrics
 import matplotlib.pyplot as plt
-import matplotlib2tikz
 from sklearn.ensemble import RandomForestClassifier
+import os
 
 import CvCalibrationModel
 import AverageCurve, CvCurves
 import Optimiser
 import ItrCalculatorProb
+import DistributionPlotter
 
 
 class ModelTrainer(object):
@@ -110,8 +111,6 @@ class ModelTrainer(object):
         for i in range(plot_count):
             self.plotChange(data, labels, i, colors[i%target_count], plot_count, target_count)
             plt.plot([0, data.shape[0]], [thresholds[i], thresholds[i]], color=colors[i%target_count])
-        # import time
-        # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file" + str(round(time.time())) + ".tex")
 
     def splitTrainingData(self):
         data_split = []
@@ -363,7 +362,7 @@ class ModelTrainer(object):
             new_labels.append(labels[class_indices])
         return new_data, new_labels
 
-    def start(self):
+    def start(self, subject, make_plots):
         # split_data, split_labels = self.splitAndRollData()  # Hacky
         split_data, split_labels = self.splitTrainingData()  # Hacky
         # split_data, split_labels = self.removeClass(split_data, split_labels, 3)
@@ -400,7 +399,8 @@ class ModelTrainer(object):
         # split_class_count = map(lambda x: self.countClasses([1,2,3], x), split_labels_proba)
         print "Starting 5-fold cross-validation"
         for test_data_index in range(len(split_data)):
-            print "Starting fold " + str(test_data_index+1)
+            fold_nr = str(test_data_index+1)
+            print "Starting fold " + fold_nr
             split_training_data = self.allExceptOne(split_data, test_data_index)
             split_training_labels = self.allExceptOne(split_labels, test_data_index)
             split_training_labels_proba = self.allExceptOne(split_labels_proba, test_data_index)
@@ -455,13 +455,13 @@ class ModelTrainer(object):
                 testing_threshold_confusion_matrices1[i] += self.getConfusionMatrix(self.cv_model.thresholdPredict1(testing_prediction, current_thresholds, i/10.0), testing_labels_proba, label_order)
                 # split_testing_threshold_confusion_matrices[i] += self.getThresholdConfusionMatrix(self.cv_model.splitThresholdPredict(testing_prediction, split_current_thresholds, i/10.0), map(str, modified_testing_labels), label_order)
 
-            # self.plotAllChanges(self.cv_model.predictProba(training_data, self.t_proba_maf, self.t_normalise_probas), training_labels, current_thresholds)
-            # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file5" + str(round(time.time())) + ".tex", draw_rectangles=True)
-            # self.plotAllChanges(self.cv_model.predictProba(testing_data, self.t_proba_maf, self.t_normalise_probas), testing_labels, current_thresholds)
-            # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file6" + str(round(time.time())) + ".tex", draw_rectangles=True)
-        #     plt.draw()
-        #     plt.show()
-        #
+            if make_plots:
+                plot_file_name_prefix = "sub" + subject + "fold" + fold_nr
+                self.plotAllChanges(self.cv_model.predictProba(training_data, self.t_proba_maf, self.t_normalise_probas), training_labels, current_thresholds)
+                plt.savefig(os.path.join(os.pardir, "plots", plot_file_name_prefix + "_feature_change_training"))
+                self.plotAllChanges(self.cv_model.predictProba(testing_data, self.t_proba_maf, self.t_normalise_probas), testing_labels, current_thresholds)
+                plt.savefig(os.path.join(os.pardir, "plots", plot_file_name_prefix + "_feature_change_test"))
+
         # self.cv_model.fit(np.concatenate(split_data, 0), np.concatenate(split_labels, 0))
         threshold = np.mean(thresholds, 0)
         testing_prc = CvCurves.PrecisionRecallCvCurve(label_order)
@@ -485,20 +485,36 @@ class ModelTrainer(object):
             # print self.calculateAccuracyIgnoringLastColumn(split_testing_threshold_confusion_matrices[i])
             # print split_testing_threshold_confusion_matrices[i]
 
-        all_data = np.concatenate(testing_predictions, 0)
-        all_labels = np.concatenate(split_labels_proba, 0)
-        # plotter = DistributionPlotter.Plotter(all_data, all_labels, thresholds, label_order)
-        #
-        # plotter.plotPdf()
-        # # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file0" + str(round(time.time())) + ".tex", draw_rectangles=True)
-        # # self.cv_model.fit(np.concatenate(split_data[:-1],0), np.concatenate(split_labels[:-1],0))
-        # # plotter.plotLda(self.cv_model, np.concatenate(split_data[:-1],0), np.concatenate(split_labels[:-1],0))
-        # # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file1" + str(round(time.time())) + ".tex", draw_rectangles=True)
-        # # plotter.plotLda(self.cv_model, split_data[-1], split_labels[-1])
-        # # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file2" + str(round(time.time())) + ".tex", draw_rectangles=True)
-        # # plotter.plotCdf()
-        # # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file3" + str(round(time.time())) + ".tex", draw_rectangles=True)
-        # # plotter.plotJointPdfs()
-        # # plotter.pair()
-        # # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file4" + str(round(time.time())) + ".tex", draw_rectangles=True)
-        # plt.show()
+        if make_plots:
+            all_data = np.concatenate(testing_predictions, 0)
+            all_labels = np.concatenate(split_labels_proba, 0)
+            plot_file_name_prefix = "sub" + str(subject)
+            plotter = DistributionPlotter.Plotter(all_data, all_labels, thresholds, label_order)
+            plotter.plotPdf()
+            plt.savefig(os.path.join(os.pardir, "plots", plot_file_name_prefix + "_feature_pdf"))
+            self.cv_model.fit(np.concatenate(split_data[:-1],0), np.concatenate(split_labels[:-1],0))
+            plotter.plotLda(self.cv_model, np.concatenate(split_data[:-1],0), np.concatenate(split_labels[:-1],0))
+            plt.savefig(os.path.join(os.pardir, "plots", plot_file_name_prefix + "_lda_dim_reduction_train"))
+            plotter.plotLda(self.cv_model, split_data[-1], split_labels[-1])
+            plt.savefig(os.path.join(os.pardir, "plots", plot_file_name_prefix + "_lda_dim_reduction_test"))
+            plotter.plotCdf()
+            plt.savefig(os.path.join(os.pardir, "plots", plot_file_name_prefix + "_feature_cdf"))
+            plotter.pair()
+            plt.savefig(os.path.join(os.pardir, "plots", plot_file_name_prefix + "_feature_pariwise_scatter"))
+            self.checkDataAndPlotTestingCurve(testing_prc)
+            plt.savefig(os.path.join(os.pardir, "plots", plot_file_name_prefix + "_precision_recall_test"))
+            self.checkDataAndPlotTestingCurve(testing_roc)
+            plt.savefig(os.path.join(os.pardir, "plots", plot_file_name_prefix + "_roc_test"))
+            self.checkDataAndPlotTrainingCurve(training_prcs, plot_file_name_prefix + "_precision_recall")
+            self.checkDataAndPlotTrainingCurve(training_rocs, plot_file_name_prefix + "_roc")
+            print "Plots have been saved to 'plots' directory"
+
+    def checkDataAndPlotTestingCurve(self, curve):
+        plt.clf()
+        curve.plot()
+
+    def checkDataAndPlotTrainingCurve(self, curves, curve_name):
+        for i, curve in enumerate(curves):
+            plt.clf()
+            curve.plot(i)
+            plt.savefig(os.path.join(os.pardir, "plots", curve_name + "_train_fold" + str(i+1)))
