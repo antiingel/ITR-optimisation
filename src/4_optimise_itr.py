@@ -38,5 +38,5 @@ for subject in subjects:
         all_data_for_subject,
         labels_for_subject
     )
-    trainer.start(subject)
+    trainer.start(subject, make_plots=True)
     raw_input("\nPress enter to start optimising for next subject")
