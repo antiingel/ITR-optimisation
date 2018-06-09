@@ -80,7 +80,6 @@ class CvCurve(object):
         predictions = np.transpose(np.concatenate(self.all_predictions, 0))  # Threshold from concatenated curve
         labels = np.concatenate(self.all_labels, 0)
         binary_labels = self.getBinaryLabels(labels)
-        print(len(list(labels)))
         optimiser.setCurveData(self.ordered_labels, predictions, binary_labels)
         return optimiser.optimise()
 

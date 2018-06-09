@@ -72,7 +72,6 @@ class Model(object):
                     predicted = i+1
                     break
             predictions.append(str(predicted))
-        print(predictions)
         return predictions
 
     def thresholdPredict(self, scores, thresholds, margin):
@@ -145,8 +144,7 @@ class TrainingModel(Model):
 
     def fit(self, data, labels):
         self.feature_selector.fit(data, labels)
-        # print self.feature_selector.get_support(True)
-        print len(self.feature_selector.get_support(True))
+        # print len(self.feature_selector.get_support(True))
         if len(self.feature_selector.get_support(True)) == 0:
             self.do_feature_selection = False
         else:

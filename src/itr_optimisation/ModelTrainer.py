@@ -201,16 +201,15 @@ class ModelTrainer(object):
     def printConfusionMatrixData(self, confusion_matrix):
         accuracy = self.calculateAccuracyIgnoringLastColumn(confusion_matrix)
         prediction_probability = self.calculatePredictionProbability(confusion_matrix)
-        print "Proposed ITR:"
+        print "Proposed ITR:",
         print self.itr_calculator_prob.itrMiFromMatrix(confusion_matrix)
-        print "Standard ITR:"
+        print "Standard ITR:",
         print self.itr_calculator_prob.itrBitPerMin(accuracy, prediction_probability)
-        print "Accuracy:"
+        print "Accuracy:",
         print accuracy
-        print "MDT:"
+        print "MDT:",
         print self.itr_calculator_prob.mdt(prediction_probability)
-        print "Predictions:"
-        print "$\\frac{" + str((confusion_matrix.sum()-confusion_matrix.sum(axis=0)[-1])) + "}{" + str(confusion_matrix.sum()) + "}$"
+        print "Made " + str((confusion_matrix.sum()-confusion_matrix.sum(axis=0)[-1])) + " predictions out of " + str(confusion_matrix.sum()) + " possible."
         print confusion_matrix
 
     # def getLabelConverter(self, label_order):
@@ -399,7 +398,9 @@ class ModelTrainer(object):
         testing_predictions = []
         # label_order1 = sorted(set(split_labels[0]))
         # split_class_count = map(lambda x: self.countClasses([1,2,3], x), split_labels_proba)
+        print "Starting 5-fold cross-validation"
         for test_data_index in range(len(split_data)):
+            print "Starting fold " + str(test_data_index+1)
             split_training_data = self.allExceptOne(split_data, test_data_index)
             split_training_labels = self.allExceptOne(split_labels, test_data_index)
             split_training_labels_proba = self.allExceptOne(split_labels_proba, test_data_index)
@@ -468,18 +469,18 @@ class ModelTrainer(object):
         testing_prc.calculateFromCurves(testing_prcs)
         testing_roc.calculateFromCurves(testing_rocs)
 
-        print self.calculateAccuracy(training_confusion_matrices)
+        print "\nResults on training data (predicting with built in LDA predict):"
+        print "Accuracy", self.calculateAccuracy(training_confusion_matrices)
         print training_confusion_matrices
-        print self.calculateAccuracy(testing_confusion_matrices)
+        print "\nResults on test data (predicting with built in LDA predict):"
+        print "Accuracy", self.calculateAccuracy(testing_confusion_matrices)
         print testing_confusion_matrices
-        print self.printConfusionMatrixData(self.addLastRowColumn(testing_confusion_matrices))
-        print "Random forest"
-        print self.printConfusionMatrixData(self.addLastRowColumn(random_forest_matrices))
+        print "\nResults for Random forest:"
+        self.printConfusionMatrixData(self.addLastRowColumn(random_forest_matrices))
         for i in range(n_thresholds):
-            print i
-            print testing_threshold_confusion_matrices1[i]
+            print "\nResults for proposed classifier that always makes a prediction:"
             self.printConfusionMatrixData(self.addLastRowColumn(testing_threshold_confusion_matrices1[i]))
-            print training_threshold_confusion_matrices[i]
+            print "\nResults for proposed classifier:"
             self.printConfusionMatrixData(testing_threshold_confusion_matrices[i])
             # print self.calculateAccuracyIgnoringLastColumn(split_testing_threshold_confusion_matrices[i])
             # print split_testing_threshold_confusion_matrices[i]
@@ -501,4 +502,3 @@ class ModelTrainer(object):
         # # plotter.pair()
         # # matplotlib2tikz.save("C:\\Users\Anti\\Desktop\\PycharmProjects\\VEP-BCI\\file4" + str(round(time.time())) + ".tex", draw_rectangles=True)
         # plt.show()
-

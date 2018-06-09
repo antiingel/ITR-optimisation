@@ -114,8 +114,6 @@ class Optimiser(object):
         #     for p2, r2 in zip(all_precisions[1], all_relative_predictions[1]):
         #         for p3, r3 in zip(all_precisions[2], all_relative_predictions[2]):
         #             itrs.append(itr_calculator.itrFromPrecisionPredictions([p1,p2,p3], [r1,r2,r3])) # 58.3526461033  15482509
-        # print max(itrs)
-        # print np.argmax(itrs)
         self.fitCurves(all_thresholds, all_precisions, all_relative_predictions, all_predictions, self.binary_labels)
 
         max_itrs = []
@@ -125,8 +123,7 @@ class Optimiser(object):
             thresholds, itr = self.findOptimalThresholds(function, initial_guess, bounds, gradient, constraints)
             max_itrs.append(itr)
             max_itr_thresholds.append(thresholds)
-            # print np.array(thresholds), itr
-        print max_itrs
+        # print max_itrs
         result = max_itr_thresholds[np.argmax(max_itrs)]
         return result
         # indices = [thresholds.searchsorted(threshold, side="left") for threshold, thresholds in zip(result, all_thresholds)]
@@ -235,6 +232,7 @@ class GradientDescentOptimiser(Optimiser):
         n_decreases = 50
         bounds = np.array(bounds)
         current_thresholds = initial_guess
+        debug = False
         for j in range(n_decreases):
             # mu /= 2
             # stop_threshold /= 10
@@ -246,12 +244,10 @@ class GradientDescentOptimiser(Optimiser):
                 current_thresholds = self.calculateNewThresholds(itr_gradient, current_thresholds, bounds, mu)
                 # print current_itr, current_thresholds, itr_gradient
                 if not np.all(np.logical_and(np.all(bounds[:, 0] <= current_thresholds), np.all(current_thresholds <= bounds[:, 1]))):
-                    print "Out of bounds", j*steps_before_decreasing+i, current_thresholds
+                    if debug: print "Out of bounds", j*steps_before_decreasing+i, current_thresholds
                     return max_thresholds1, max_itr
                 if previous_itr is not None and abs(current_itr-previous_itr) < stop_threshold:# or current_thresholds in previous_thresholds:
-                    # print max_actual, max_itr, max_itr_indices, max_actual_indices, "kartul", np.sum(np.array(max_itr_indices) == np.array(max_actual_indices))
-                    print "Converged in", j*steps_before_decreasing+i, "steps. Mu:", mu
-                    # print [thresh[index] for thresh, index in zip(all_thresholds, max_itr_indices)]
+                    if debug: print "Converged in", j*steps_before_decreasing+i, "steps. Mu:", mu
                     return max_thresholds1, max_itr
                 # previous_thresholds.append(current_thresholds)
                 previous_itr = current_itr
