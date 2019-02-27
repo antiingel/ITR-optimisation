@@ -1,5 +1,11 @@
 # Direct ITR optimisation for SSVEP-based BCI
 
+## Introduction
+
+This repository contains example code for optimising information transfer rate (ITR) in steady-state visual evoked potential based brain computer interfaces. The novelty of the proposed classification method is that it is based on direct ITR maximisation. ITR is a standard measure of performance for BCIs. It combines the accuracy and the speed of the classifier into a single number which shows how much information is transferred by the BCI in one unit of time. Therefore, maximising ITR maximises the amount of information that the user can transfer to an external device (computer, robot, etc) in a fixed time interval. 
+
+The method is introduced in the [article](https://iopscience.iop.org/article/10.1088/1741-2552/aae8c7): Anti Ingel, Ilya Kuzovkin, and Raul Vicente. "Direct information transfer rate optimisation for SSVEP-based BCI." Journal of neural engineering 16.1 (2018). Please cite this article when using our code.
+
 ## Requirements
 
 This code requires Python 2.7 with numpy, scipy, matplotlib, pandas, sklearn, rpy2 libraries. Library rpy2 is used to run R commands in Python. The reason for using rpy2 is that we need to calculate skew normal distribution cumulative distribution function values and I have encountered memory leak bugs in the corresponding scipy function. 
