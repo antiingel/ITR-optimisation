@@ -2,39 +2,22 @@
 
 ## Introduction
 
-This repository contains example code for optimising information transfer rate (ITR) in steady-state visual evoked potential based brain computer interfaces. The novelty of the proposed classification method is that it is based on direct ITR maximisation. ITR is a standard measure of performance for BCIs. It combines the accuracy and the speed of the classifier into a single number which shows how much information is transferred by the BCI in one unit of time. Therefore, maximising ITR maximises the amount of information that the user can transfer to an external device (computer, robot, etc) in a fixed time interval. 
+This repository contains code for optimising information transfer rate (ITR) in steady-state visual evoked potential (SSVEP) based brain computer interfaces (BCIs). This approach should work in other types of BCIs as well. The novelty of the proposed classification method is that it is based on direct ITR maximisation. ITR is a standard measure of performance for BCIs. It combines the accuracy and the speed of the classifier into a single number which shows how much information is transferred by the BCI in one unit of time. Therefore, maximising ITR maximises the amount of information that the user can transfer to an external device (computer, robot, etc) in a fixed time interval.
 
-The method is introduced in the [article](https://iopscience.iop.org/article/10.1088/1741-2552/aae8c7): Anti Ingel, Ilya Kuzovkin, and Raul Vicente. "Direct information transfer rate optimisation for SSVEP-based BCI." Journal of neural engineering 16.1 (2018). Please cite this article when using our code.
+The algorithm is introduced in the [article](https://iopscience.iop.org/article/10.1088/1741-2552/aae8c7): Anti Ingel, Ilya Kuzovkin, and Raul Vicente. "Direct information transfer rate optimisation for SSVEP-based BCI". Journal of neural engineering 16.1 (2018). Please cite this article when using the code.
+
+A few improvements to the original method were suggested in the [article](https://doi.org/10.3389/fnhum.2021.675091): Anti Ingel and Raul Vicente. "Information Bottleneck as Optimisation Method for SSVEP-Based BCI".  Frontiers in Human Neuroscience 15 (2021). These improvements have been implemented in this repository.
 
 ## Requirements
 
-This code requires Python 2.7 with numpy, scipy, matplotlib, pandas, sklearn, rpy2 libraries. Library rpy2 is used to run R commands in Python. The reason for using rpy2 is that we need to calculate skew normal distribution cumulative distribution function values and I have encountered memory leak bugs in the corresponding scipy function. 
-
-If you have problems installing rpy2 try following these steps. To install rpy2, download cp27 version from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rpy2). Then you need to add system variables (with paths changed according to your system):
-```
-R_HOME c:\program files\r\r-3.4.2
-R_USER C:\Python27\Lib\site-packages\rpy2
-R_LIBS C:/Users/Anti/Documents/R/win-library/3.4;C:/Program Files/R/R-3.4.2/library
-```
-If you are also using RStudio, change `R_USER` to
-```
-R_USER C:\Program Files\RStudio\bin;C:\Python27\Lib\site-packages\rpy2
-```
-See [here](https://stackoverflow.com/questions/12698877/how-to-setup-environment-variable-r-user-to-use-rpy2-in-python) for additional help.
-
-Other required libraries can be easily installed using `pip`.
+The code is written in Python and has been tested with Python 3.7. Running the code requires packages `numpy`, `scipy`, `sklearn`, `pandas`, `matplotlib`, `sympy`.
 
 ## Getting Started
 
-Before trying to run the code, please download the required dataset from [here](https://drive.google.com/file/d/1QXkz5T7EKcYj3GiL40zmmApryUQCwvTW/view?usp=sharing). The original dataset can also be found [here](http://www.bakardjian.com/work/ssvep_data_Bakardjian.html), but using the previous link is recommended, because it contains folder structure required by the code.
+Before trying to run the code, please download the required dataset from [here](https://drive.google.com/drive/folders/12Wu6377sfgYZ2qpOw_WUtgVYO97maDlu?usp=sharing). The original dataset can be found [here](http://www.bakardjian.com/work/ssvep_data_Bakardjian.html), but this is not necessary to run the code.
 
-Extract `data` and `plots` folders to the same folder that contains `src`. The `data` folder contains both, the original dataset and processed data. The folder `original_data` contains original data. The content of other folders is as follows:
-1. Folder `original_data_as_csv` contains `csv` files with columns corresponding to electrodes and rows corresponding to time. Information about the electrode locations can be found in `Cap_coords_all.xls` file in `original_data` folder. Script `1_original_data_to_csv.py` can be used to generate files in `original_data_as_csv` folder from the original files in `MATLAB` format in folder `original_data`.
-2. Folder `eeg_data` contains EEG data from only electrodes O1 and O2. Since visual stimulation started at second 5 and stopped at second 20 of the recording as described in `readme.txt` file in `original_data` folder, the beginning and end of each trial is removed. For each of the four subjects, five recordings are generated by concatenating data from different trials (each recording contains one trial for each of the three frequencies. Script `2_generate_eeg_data.py` can be used to generate files in `eeg_data` folder from the files in folder `original_data_as_csv`.
-3. Folder `feature_data` contains extracted features for each of the subject and for all of their recordings. PSDA and CCA feature extraction methods were used, both with using 3 harmonics. Script `3_generate_feature_data.py` can be used to generate files in `feature_data` folder from the files in folder `eeg_data`.
-
-Finally, the script `4_optimise_itr` can be used to run ITR optimisation procedure, using the files in `feature_data` folder. This script prints into console the results of different classification methods (accuracy, ITR, MDT, confusion matrix) and also produces different kinds of plots into the `plots` folder (if `make_plots` argument of trainer.start is set to True).
+Download `data` folder to the same folder that contains `src`. The `data` folder contains the features extracted from the original data. The extracted features can be calculated from the original data by running the files `1_original_data_to_csv.py`, `2_generate_eeg_data.py`, `3_generate_feature_data.py`. If the features have been obtained (either by downloading directly, or calculating from the original data), the optimisation procedure can be executed by running the file `4_optimise_itr.py`.
 
 ## Contact
 
-For additional information, feel free to contact the author Anti Ingel (antiingel@gmail.com).
+For additional information, feel free to contact Anti Ingel (antiingel@gmail.com).
