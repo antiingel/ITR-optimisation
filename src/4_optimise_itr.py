@@ -2,22 +2,24 @@ from itr_optimisation import *
 
 from sklearn.feature_selection import SelectFpr
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-import sklearn.metrics
 
 
 subjects = ["1", "2", "3", "4"]
 recordings = ["1", "2", "3", "4", "5"]
 
+np.random.seed(200)
 
 n_classes = 3
 window_length = 1
 step_length = 0.125
 
-do_feature_selection = True
-add_ratios = True
+do_feature_selection = False
+add_ratios = False
 do_lda = True
 do_lda_separately = True
 do_skew_norm_plots = False
+
+treat_as_online_signal = True
 
 itr_function, gradient_function = construct_objective_function(window_length, step_length, n_classes)
 
@@ -36,7 +38,7 @@ for subject in subjects:
 
     accuracies = []
     mdts = []
-    prediction_probabilities = []
+    prediction_counts = []
     standard_itrs = []
     mi_itrs = []
 
@@ -64,19 +66,19 @@ for subject in subjects:
 
         if not np.all(np.isnan(itrs)):
             best_thresholds = thresholds[np.nanargmax(itrs)]
+            mi_itr, standard_itr, accuracy, mdt, prediction_count = evaluate_performance(
+                new_test_features, best_thresholds, test_labels, n_classes, window_length, step_length, n_samples, treat_as_online_signal
+            )
 
-            test_predict = predict(new_test_features, best_thresholds, n_classes)
-            test_confusion_matrix = sklearn.metrics.confusion_matrix(test_labels, test_predict, labels=[i+1 for i in range(n_classes+1)])
-
-            accuracies.append(accuracy_from_confusion_matrix(test_confusion_matrix))
-            prediction_probabilities.append(prediction_probability_from_confusion_matrix(test_confusion_matrix))
-            mi_itrs.append(itr_mi_from_confusion_matrix(test_confusion_matrix, window_length, step_length, n_classes))
-            standard_itrs.append(standard_itr_from_confusion_matrix(test_confusion_matrix, window_length, step_length, n_classes))
-            mdts.append(mdt_from_prediction_prob(prediction_probabilities[-1], window_length, step_length))
+            accuracies.append(accuracy)
+            prediction_counts.append(prediction_count)
+            mi_itrs.append(mi_itr)
+            standard_itrs.append(standard_itr)
+            mdts.append(mdt)
 
     print("Results for subject " + str(subject) + ":")
     print(np.mean(accuracies), accuracies)
     print(np.mean(mdts), mdts)
     print(np.mean(mi_itrs), mi_itrs)
     print(np.mean(standard_itrs), standard_itrs)
-    print(np.mean(prediction_probabilities), prediction_probabilities)
+    print(np.mean(prediction_counts), prediction_counts)

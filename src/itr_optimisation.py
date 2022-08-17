@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 from scipy.stats import skewnorm
 from scipy.optimize import basinhopping
+import sklearn.metrics
 
 import os
 
@@ -261,3 +262,44 @@ def train_classifier(new_train_features, itr_function, gradient_function, skew_n
         thresholds.append(result.x)
         itrs.append(-result.fun)
     return itrs, thresholds
+
+
+def evaluate_performance(new_test_features, best_thresholds, test_labels, n_classes, window_length, step_length, n_samples, treat_as_online):
+    if treat_as_online:
+
+        test_predictions = []
+        test_correct_labels = []
+        i = 0
+        while i < len(test_labels):
+            current_features = new_test_features[i]
+            current_label = test_labels[i]
+            test_prediction = predict([current_features], best_thresholds, n_classes)[0]
+            if test_prediction != n_classes+1:
+                test_predictions.append(test_prediction)
+                test_correct_labels.append(current_label)
+                i += int(window_length/step_length)
+                if i < len(test_labels) and test_labels[i] != current_label:
+                    i = np.where(test_labels == test_labels[i])[0][0]
+            else:
+                test_predictions.append(test_prediction)
+                test_correct_labels.append(current_label)
+                i += 1
+        test_confusion_matrix = sklearn.metrics.confusion_matrix(test_correct_labels, test_predictions, labels=[i+1 for i in range(n_classes+1)])
+
+        prediction_count = np.sum(np.array(test_predictions) != n_classes+1)
+        accuracy = accuracy_from_confusion_matrix(test_confusion_matrix)
+        mdt = (n_samples*step_length+(window_length-step_length)*n_classes)/prediction_count
+        mi_itr = mi_from_confusion_matrix(test_confusion_matrix, n_classes)*60/mdt
+        standard_itr = (standard_itr_per_trial(accuracy, n_classes)*60/mdt)
+    else:
+        test_predict = predict(new_test_features, best_thresholds, n_classes)
+        test_confusion_matrix = sklearn.metrics.confusion_matrix(test_labels, test_predict, labels=[i + 1 for i in range(n_classes + 1)])
+
+        accuracy = accuracy_from_confusion_matrix(test_confusion_matrix)
+        prediction_probability = prediction_probability_from_confusion_matrix(test_confusion_matrix)
+        mi_itr = itr_mi_from_confusion_matrix(test_confusion_matrix, window_length, step_length, n_classes)
+        standard_itr = standard_itr_from_confusion_matrix(test_confusion_matrix, window_length, step_length, n_classes)
+        mdt = mdt_from_prediction_prob(prediction_probability, window_length, step_length)
+        prediction_count = test_confusion_matrix.sum() - test_confusion_matrix.sum(axis=0)[-1]
+
+    return mi_itr, standard_itr, accuracy, mdt, prediction_count
